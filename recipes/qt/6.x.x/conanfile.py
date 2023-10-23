@@ -70,6 +70,7 @@ class QtConan(ConanFile):
 
         "device": [None, "ANY"],
         "cross_compile": [None, "ANY"],
+        "cross_compile_build_tools": [True, False],
         "sysroot": [None, "ANY"],
         "multiconfiguration": [True, False],
         "disabled_features": [None, "ANY"],
@@ -113,6 +114,7 @@ class QtConan(ConanFile):
 
         "device": None,
         "cross_compile": None,
+        "cross_compile_build_tools": True,
         "sysroot": None,
         "multiconfiguration": False,
         "disabled_features": "",
@@ -562,6 +564,8 @@ class QtConan(ConanFile):
         if self.options.cross_compile:
             tc.variables["QT_QMAKE_DEVICE_OPTIONS"] = f"CROSS_COMPILE={self.options.cross_compile}"
             tc.variables["QT_HOST_PATH"] = self.dependencies["qt"].package_folder
+            if self.options.cross_compile_build_tools:
+                tc.variables["QT_FORCE_BUILD_TOOLS"] = "ON"
 
         tc.variables["FEATURE_pkg_config"] = "ON"
         if self.settings.compiler == "gcc" and self.settings.build_type == "Debug" and not self.options.shared:
