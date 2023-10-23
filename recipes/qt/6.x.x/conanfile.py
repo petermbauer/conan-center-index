@@ -6,7 +6,7 @@ import textwrap
 from conan import ConanFile
 from conan.tools.apple import is_apple_os
 from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain, cmake_layout
-from conan.tools.build import cross_building, check_min_cppstd, default_cppstd
+from conan.tools.build import can_run, cross_building, check_min_cppstd, default_cppstd
 from conan.tools.env import VirtualBuildEnv, VirtualRunEnv, Environment
 from conan.tools.files import copy, get, replace_in_file, apply_conandata_patches, save, rm, rmdir, export_conandata_patches
 from conan.tools.gnu import PkgConfigDeps
@@ -70,7 +70,6 @@ class QtConan(ConanFile):
 
         "device": [None, "ANY"],
         "cross_compile": [None, "ANY"],
-        "cross_compile_build_tools": [True, False],
         "sysroot": [None, "ANY"],
         "multiconfiguration": [True, False],
         "disabled_features": [None, "ANY"],
@@ -114,7 +113,6 @@ class QtConan(ConanFile):
 
         "device": None,
         "cross_compile": None,
-        "cross_compile_build_tools": True,
         "sysroot": None,
         "multiconfiguration": False,
         "disabled_features": "",
@@ -173,6 +171,8 @@ class QtConan(ConanFile):
             del self.options.with_gssapi
         if self.settings.os != "Linux":
             self.options.qtwayland = False
+
+        self.options.qttools = can_run(self)
 
         for m in self._submodules:
             if m not in self._get_module_tree:
@@ -564,8 +564,6 @@ class QtConan(ConanFile):
         if self.options.cross_compile:
             tc.variables["QT_QMAKE_DEVICE_OPTIONS"] = f"CROSS_COMPILE={self.options.cross_compile}"
             tc.variables["QT_HOST_PATH"] = self.dependencies["qt"].package_folder
-            if self.options.cross_compile_build_tools:
-                tc.variables["QT_FORCE_BUILD_TOOLS"] = "ON"
 
         tc.variables["FEATURE_pkg_config"] = "ON"
         if self.settings.compiler == "gcc" and self.settings.build_type == "Debug" and not self.options.shared:
